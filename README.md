@@ -143,8 +143,7 @@ auto const pred = [&](std::uintptr_t const& address)
 {
     try
     {
-        return
-            handle.read<std::remove_cv_t<decltype(sought_value)>>(address) == sought_value;
+        return handle.read<std::remove_cv_t<decltype(sought_value)>>(address) == sought_value;
     }
     catch (std::system_error const&) {} // Suppress errors
 
