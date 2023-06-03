@@ -58,6 +58,7 @@ Let `handle` be an instance of `worm::ihandle`, or `worm::ohandle`, or `worm::io
 
 ```cpp
 static_assert(decltype(handle)::is_readable::value);
+
 std::vector<worm::memory_region> regions = handle.regions();
 ```
 
@@ -95,9 +96,9 @@ std::size_t const bytes_written_b = handle.write_bytes(addr, buf, size);
 
 A bound value can be one of the following types:
 
-- `worm::ihandle::bound` is a readable bound
-- `worm::ohandle::bound` is a writable bound
-- `worm::iohandle::bound` is a readable and writable bound
+- `worm::ihandle::bound` - a readable bound
+- `worm::ohandle::bound` - a writable bound
+- `worm::iohandle::bound` - a readable and writable bound
 
 #### Readable bound value
 
@@ -116,7 +117,7 @@ static_assert(decltype(handle)::is_writable::value);
 
 auto const obound = handle.bind<int>(addr);
 
-std::size_t const bytes_written = ibounds.write(1234);
+std::size_t const bytes_written = obound.write(1234);
 ```
 
 ### Scanning virtual memory
