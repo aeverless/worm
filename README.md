@@ -57,7 +57,7 @@ worm::iohandle handle(pid);
 Let `handle` be an instance of `worm::ihandle`, or `worm::ohandle`, or `worm::iohandle`.
 
 ```cpp
-static_assert(decltype(handle)::is_readable::value);
+static_assert(decltype(handle)::is_readable_v);
 
 std::vector<worm::memory_region> regions = handle.regions();
 ```
@@ -69,7 +69,7 @@ Let `addr` be the address of an arbitrary virtual memory location of the aforeme
 #### Readable handle
 
 ```cpp
-static_assert(decltype(handle)::is_readable::value);
+static_assert(decltype(handle)::is_readable_v);
 
 auto const value = handle.read<int>(addr);
 
@@ -82,7 +82,7 @@ std::size_t const bytes_read = handle.read_bytes(addr, buf, size);
 #### Writable handle
 
 ```cpp
-static_assert(decltype(handle)::is_writable::value);
+static_assert(decltype(handle)::is_writable_v);
 
 std::size_t const bytes_written_a = handle.write<unsigned long>(addr, 0xdeadbeef);
 
@@ -103,7 +103,7 @@ A bound value can be one of the following types:
 #### Readable bound value
 
 ```cpp
-static_assert(decltype(handle)::is_readable::value);
+static_assert(decltype(handle)::is_readable_v);
 
 auto const ibound = handle.bind<int>(addr);
 
@@ -113,7 +113,7 @@ int const value = ibound.read();
 #### Writable bound value
 
 ```cpp
-static_assert(decltype(handle)::is_writable::value);
+static_assert(decltype(handle)::is_writable_v);
 
 auto const obound = handle.bind<int>(addr);
 
@@ -125,7 +125,7 @@ std::size_t const bytes_written = obound.write(1234);
 Say we want to find first four addresses that hold `(int) 213456` in the first memory region.
 
 ```cpp
-static_assert(decltype(handle)::is_readable::value);
+static_assert(decltype(handle)::is_readable_v);
 
 constexpr int sought_value = 213456;
 
@@ -140,7 +140,7 @@ decltype(available_range) range{available_range.front(), available_range.back() 
 
 // Be careful to capture handles by reference, or else
 // they will be recreated, and that might be not what you want.
-auto const pred = [&](std::uintptr_t const& address)
+auto const pred = [&](worm::address_t const& address)
 {
     try
     {

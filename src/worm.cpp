@@ -7,7 +7,7 @@
 
 #ifdef WORM_POSIX
 
-#  define WORM_ERRNO errno
+#  define WORM_ERRNO (errno)
 
 #  include <fstream>
 
@@ -57,14 +57,14 @@ basic_handle::basic_handle(std::size_t const pid, [[maybe_unused]] unsigned long
 #endif
 }
 
-basic_handle::basic_handle(std::size_t pid, [[maybe_unused]] open_mode mode)
+basic_handle::basic_handle(std::size_t pid, [[maybe_unused]] handle_mode mode)
 	: basic_handle(
 		pid,
 #ifdef WORM_POSIX
 		0
 #elif defined(WORM_WINDOWS)
-		((mode & open_mode::in)  ? PROCESS_VM_READ      | PROCESS_QUERY_LIMITED_INFORMATION : 0) |
-		((mode & open_mode::out) ? PROCESS_VM_OPERATION | PROCESS_VM_WRITE                  : 0)
+		((mode & handle_mode::in)  ? PROCESS_VM_READ      | PROCESS_QUERY_LIMITED_INFORMATION : 0) |
+		((mode & handle_mode::out) ? PROCESS_VM_OPERATION | PROCESS_VM_WRITE                  : 0)
 #endif
 	  )
 {}
@@ -131,8 +131,8 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 #  endif
 	);
 
-	constexpr wchar_t column_delim = L' ';
-	constexpr wchar_t range_delim = L'-';
+	static constexpr wchar_t column_delim = L' ';
+	static constexpr wchar_t range_delim = L'-';
 
 	while (!f.eof())
 	{
@@ -145,7 +145,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 			break;
 		}
 
-		std::wstring const range_str(row.substr(0, first_delim_index));
+		std::wstring_view const range_str(row.substr(0, first_delim_index));
 		std::size_t const range_delim_index = range_str.find(range_delim);
 
 		regions.push_back({
@@ -174,7 +174,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 	constexpr std::size_t max_path_size = 32'768;
 	wchar_t module_name[max_path_size];
 
-	for (std::size_t i = 0; i < module_count; i++)
+	for (std::size_t i = 0; i < module_count; ++i)
 	{
 		auto const& module_handle = modules[i];
 
@@ -183,7 +183,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 		MODULEINFO module_info;
 		GetModuleInformation(windows_handle_, module_handle, &module_info, sizeof(module_info));
 
-		std::uintptr_t const base_addr = reinterpret_cast<std::uintptr_t>(module_handle);
+		auto const base_addr = reinterpret_cast<address_t>(module_handle);
 		regions.push_back({module_name, {base_addr, base_addr + module_info.SizeOfImage}});
 	}
 #endif
