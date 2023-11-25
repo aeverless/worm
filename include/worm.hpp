@@ -27,6 +27,9 @@ namespace worm
 /// Address type.
 using address_t = std::uintptr_t;
 
+/// Process ID type.
+using pid_t = std::size_t;
+
 /// Memory region.
 struct memory_region
 {
@@ -81,15 +84,15 @@ enum handle_mode
  */
 class basic_handle
 {
-protected:
 	/// Process ID
-	std::size_t pid_;
+	pid_t pid_;
 
 #ifdef WORM_WINDOWS
 	/// Windows handle pointer. Only defined on Windows.
 	void* windows_handle_;
 #endif
 
+protected:
 	/**
 	 * @brief Private implementation of reading bytes.
 	 * It is not meant to be directly called.
@@ -150,7 +153,7 @@ public:
 	 *       privilege errors on compile-time, or may make privilege escalation via
 	 *       conversion or other means possible.
 	 */
-	explicit basic_handle(std::size_t pid, unsigned long system_access_flags);
+	explicit basic_handle(pid_t pid, unsigned long system_access_flags);
 
 	/**
 	 * @brief Construct and bind a handle.
@@ -163,10 +166,13 @@ public:
 	 *
 	 * @throws `std::system_error` if failed to bind a handle
 	 */
-	 explicit basic_handle(std::size_t pid, handle_mode mode = {});
+	 explicit basic_handle(pid_t pid, handle_mode mode = {});
 
 	/// Handle destructor.
 	~basic_handle() noexcept;
+
+	/// Get ID of the process that this handle is attached to.
+	[[nodiscard]] pid_t pid() const noexcept;
 };
 
 /**
@@ -200,7 +206,7 @@ public:
 	 *       to system access flags. If you want to pass other access flags,
 	 *       see the overload with `unsigned long` as the second parameter.
 	 */
-	explicit handle(std::size_t pid)
+	explicit handle(pid_t pid)
 		: basic_handle(pid, mode)
 	{}
 

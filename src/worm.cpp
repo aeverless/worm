@@ -43,7 +43,7 @@ namespace worm
 	return std::system_error({WORM_ERRNO, std::system_category()}, what_arg);
 }
 
-basic_handle::basic_handle(std::size_t const pid, [[maybe_unused]] unsigned long system_access_flags)
+basic_handle::basic_handle(pid_t pid, [[maybe_unused]] unsigned long system_access_flags)
 	: pid_(pid)
 #ifdef WORM_WINDOWS
 	, windows_handle_(OpenProcess(system_access_flags, false, pid))
@@ -57,7 +57,7 @@ basic_handle::basic_handle(std::size_t const pid, [[maybe_unused]] unsigned long
 #endif
 }
 
-basic_handle::basic_handle(std::size_t pid, [[maybe_unused]] handle_mode mode)
+basic_handle::basic_handle(pid_t pid, [[maybe_unused]] handle_mode mode)
 	: basic_handle(
 		pid,
 #ifdef WORM_POSIX
@@ -74,6 +74,11 @@ basic_handle::~basic_handle() noexcept
 #ifdef WORM_WINDOWS
 	CloseHandle(windows_handle_);
 #endif
+}
+
+[[nodiscard]] pid_t basic_handle::pid() const noexcept
+{
+	return pid_;
 }
 
 std::size_t basic_handle::read_bytes_impl(void const* src, void* dst, std::size_t size) const
