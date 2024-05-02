@@ -1,11 +1,11 @@
-# Copyright (c) 2023 A.A.A. (contact at aeverless dot dev)
+# Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
 #
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt
 
 cmake_minimum_required(VERSION 3.26)
 
-project(worm VERSION 1.0.1)
+project(worm VERSION 1.1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

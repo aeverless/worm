@@ -1,4 +1,4 @@
-// Copyright (c) 2023 A.A.A. (contact at aeverless dot dev)
+// Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
 //
 // Distributed under the MIT License.
 // A copy of the license is present in the LICENSE file.
@@ -84,7 +84,7 @@ enum handle_mode
  */
 class basic_handle
 {
-	/// Process ID
+	/// Process ID.
 	pid_t pid_;
 
 #ifdef WORM_WINDOWS

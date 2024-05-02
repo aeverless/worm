@@ -1,11 +1,11 @@
-// Copyright (c) 2023 A.A.A. (contact at aeverless dot dev)
+// Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
 //
 // Distributed under the MIT License.
 // A copy of the license is present in the LICENSE file.
 
 #include "worm.hpp"
 
-#ifdef WORM_POSIX
+#if defined(WORM_POSIX)
 
 #  define WORM_ERRNO (errno)
 
@@ -60,7 +60,7 @@ basic_handle::basic_handle(pid_t pid, [[maybe_unused]] unsigned long system_acce
 basic_handle::basic_handle(pid_t pid, [[maybe_unused]] handle_mode mode)
 	: basic_handle(
 		pid,
-#ifdef WORM_POSIX
+#if defined(WORM_POSIX)
 		0
 #elif defined(WORM_WINDOWS)
 		((mode & handle_mode::in)  ? PROCESS_VM_READ      | PROCESS_QUERY_LIMITED_INFORMATION : 0) |
@@ -76,7 +76,7 @@ basic_handle::~basic_handle() noexcept
 #endif
 }
 
-[[nodiscard]] pid_t basic_handle::pid() const noexcept
+pid_t basic_handle::pid() const noexcept
 {
 	return pid_;
 }
@@ -89,7 +89,7 @@ std::size_t basic_handle::read_bytes_impl(void const* src, void* dst, std::size_
 #endif
 
 	if (
-#ifdef WORM_POSIX
+#if defined(WORM_POSIX)
 		ssize_t const bytes_read = process_vm_readv(pid_, &local, 1, &remote, 1, 0); bytes_read >= 0
 #elif defined(WORM_WINDOWS)
 		std::size_t bytes_read = 0; ReadProcessMemory(windows_handle_, src, dst, size, &bytes_read)
@@ -110,7 +110,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 #endif
 
 	if (
-#ifdef WORM_POSIX
+#if defined(WORM_POSIX)
 		ssize_t const bytes_written = process_vm_writev(pid_, &local, 1, &remote, 1, 0); bytes_written >= 0
 #elif defined(WORM_WINDOWS)
 		std::size_t bytes_written = 0; WriteProcessMemory(windows_handle_, dst, src, size, &bytes_written)
@@ -123,11 +123,11 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 	throw make_system_error("failed to write to virtual memory");
 }
 
-[[nodiscard]] std::vector<memory_region> basic_handle::regions_impl() const
+std::vector<memory_region> basic_handle::regions_impl() const
 {
 	std::vector<memory_region> regions;
 
-#ifdef WORM_POSIX
+#if defined(WORM_POSIX)
 	std::wifstream f(
 #  ifdef __cpp_lib_format
 		std::format("/proc/{}/maps", pid_)
@@ -165,7 +165,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 	DWORD size;
 	if (!EnumProcessModules(windows_handle_, nullptr, 0, &size))
 	{
-		throw make_system_error("failed to initially enumerate process modules");
+		throw make_system_error("failed to count process modules during initial enumeration");
 	}
 
 	std::size_t const module_count = size / sizeof(HMODULE);
@@ -176,7 +176,7 @@ std::size_t basic_handle::write_bytes_impl(void* dst, void const* src, std::size
 		throw make_system_error("failed to enumerate process modules");
 	}
 
-	constexpr std::size_t max_path_size = 32'768;
+	static constexpr std::size_t max_path_size = 32'768;
 	wchar_t module_name[max_path_size];
 
 	for (std::size_t i = 0; i < module_count; ++i)
