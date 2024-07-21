@@ -1,22 +1,20 @@
 # worm
 
-**worm** is a cross-platform C++20 library that provides several bindings to Windows and POSIX API
+**worm** is a simple cross-platform C++20 library that provides bindings to Windows and POSIX API
 with intent to simplify interactions with external processes' virtual memory.
 
 It is highly encouraged that you use this library in conjunction with C++20 STL features.
 
-The library is bare-bones and not meant to be extensively used in projects dealing with memory at a low level.
-
 ## Features
 
-- Simple interface for reading from and writing to external processes' virtual memory
+- Simplicity - minimal interface for reading from and writing to external processes' virtual memory
 - Compile-time safety - privilege errors are caught compile-time
 - Portability - the same feature set is available both for Windows and POSIX-compliant system
 - Compliance with STL - the library is built with C++20 features in mind
 
 ## Exceptions
 
-While using the library, keep in mind that almost all functions in it are potentially throwing (even some constructors).
+While using the library, keep in mind that almost all functions in it are potentially throwing (including constructors).
 
 In most of the examples below, however, there are no `try`-`catch` blocks in order to reduce visual noise.
 
@@ -27,7 +25,7 @@ Let `pid` be the process id of an arbitrary running process.
 Prerequisite for each of the examples:
 
 ```cpp
-#include <worm.hpp>
+#include <worm/worm.hpp>
 ```
 
 ### Creating a handle
@@ -57,7 +55,7 @@ worm::iohandle handle(pid);
 Let `handle` be an instance of `worm::ihandle`, or `worm::ohandle`, or `worm::iohandle`.
 
 ```cpp
-static_assert(decltype(handle)::is_readable_v);
+static_assert(decltype(handle)::readable);
 
 std::vector<worm::memory_region> regions = handle.regions();
 ```
@@ -66,58 +64,62 @@ std::vector<worm::memory_region> regions = handle.regions();
 
 Let `addr` be the address of an arbitrary virtual memory location of the aforementioned process.
 
+Note that handles cannot be copied and can only be moved.
+
 #### Readable handle
 
 ```cpp
-static_assert(decltype(handle)::is_readable_v);
+static_assert(decltype(handle)::readable);
 
 auto const value = handle.read<int>(addr);
 
-unsigned char buf[13];
-constexpr std::size_t size = 7;
+// Reading into a byte buffer
+unsigned char buffer[42];
+std::size_t const bytes_read = handle.read_bytes(addr, buffer, sizeof(buffer));
 
-std::size_t const bytes_read = handle.read_bytes(addr, buf, size);
+// Reading a value
+unsigned long const value = handle.read<unsigned long>(addr);
 ```
 
 #### Writable handle
 
 ```cpp
-static_assert(decltype(handle)::is_writable_v);
+static_assert(decltype(handle)::writable);
 
-std::size_t const bytes_written_a = handle.write<unsigned long>(addr, 0xdeadbeef);
+// Writing from a byte buffer
+unsigned char buffer[42]{};
+std::size_t const bytes_written_via_buffer = handle.write_bytes(addr, buffer, sizeof(buffer));
 
-unsigned char buf[7]{};
-constexpr std::size_t size = 4;
-
-std::size_t const bytes_written_b = handle.write_bytes(addr, buf, size);
+// Writing a value
+std::size_t const bytes_written_via_value = handle.write<unsigned long>(addr, 0xdeadbeef);
 ```
 
 ### Bound values
 
 A bound value can be one of the following types:
 
-- `worm::ihandle::bound` - a readable bound
-- `worm::ohandle::bound` - a writable bound
-- `worm::iohandle::bound` - a readable and writable bound
+- `worm::ihandle::bound<T>` - a readable bound of type `T`
+- `worm::ohandle::bound<T>` - a writable bound of type `T`
+- `worm::iohandle::bound<T>` - a readable and writable bound of type `T`
 
 #### Readable bound value
 
 ```cpp
-static_assert(decltype(handle)::is_readable_v);
+static_assert(decltype(handle)::readable);
 
-auto const ibound = handle.bind<int>(addr);
+auto const readable_bound = handle.bind<int>(addr);
 
-int const value = ibound.read();
+int const value = readable_bound.read();
 ```
 
 #### Writable bound value
 
 ```cpp
-static_assert(decltype(handle)::is_writable_v);
+static_assert(decltype(handle)::writable);
 
-auto const obound = handle.bind<int>(addr);
+auto const writable_bound = handle.bind<int>(addr);
 
-std::size_t const bytes_written = obound.write(1234);
+std::size_t const bytes_written = writable_bound.write(42);
 ```
 
 ### Scanning virtual memory
@@ -125,9 +127,9 @@ std::size_t const bytes_written = obound.write(1234);
 Say we want to find first four addresses that hold `(int) 213456` in the first memory region.
 
 ```cpp
-static_assert(decltype(handle)::is_readable_v);
+static_assert(decltype(handle)::readable);
 
-constexpr int sought_value = 213456;
+static constexpr int sought_value = 213456;
 
 auto const available_range = handle.regions().front().range;
 
@@ -138,15 +140,17 @@ auto const available_range = handle.regions().front().range;
 // of bounds of the address space.
 decltype(available_range) range{available_range.front(), available_range.back() - sizeof(sought_value)};
 
-// Be careful to capture handles by reference, or else
-// they will be recreated, and that might be not what you want.
-auto const pred = [&](worm::address_t const& address)
+// Capture handles by reference, as they cannot be copied.
+auto const pred = [&](worm::address_t const& addr)
 {
     try
     {
-        return handle.read<std::remove_cv_t<decltype(sought_value)>>(address) == sought_value;
+        return handle.read<int>(addr) == sought_value;
     }
-    catch (std::system_error const&) {} // Suppress errors
+    catch (std::system_error const& e)
+    {
+        // Handle errors
+    }
 
     return false;
 };
@@ -157,7 +161,7 @@ for (auto const& address : range | std::views::filter(pred) | std::views::take(4
 }
 ```
 
-If we want to scan the entire available memory, we would define `available_range` as follows:
+If we were to scan the entire available memory, we would define `available_range` as follows:
 
 ```cpp
 auto const regions = handle.regions();
