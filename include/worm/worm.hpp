@@ -1,8 +1,3 @@
-// Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
-//
-// Distributed under the MIT License.
-// A copy of the license is present in the LICENSE file.
-
 #ifndef WORM_HPP
 #define WORM_HPP
 

@@ -136,7 +136,7 @@ auto const available_range = handle.regions().front().range;
 // worm::memory_region::range is a contiguous range of addresses
 // belonging to the given range, so you have to be careful with
 // the bounds in order to read only what you really need. Here,
-// we substract the size of readed value in order to not go out
+// we substract the size of read value in order to not go out
 // of bounds of the address space.
 decltype(available_range) range{available_range.front(), available_range.back() - sizeof(sought_value)};
 

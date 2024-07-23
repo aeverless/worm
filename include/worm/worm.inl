@@ -1,8 +1,3 @@
-// Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
-//
-// Distributed under the MIT License.
-// A copy of the license is present in the LICENSE file.
-
 namespace worm
 {
 constexpr auto operator&(handle_mode lhs, handle_mode rhs) noexcept -> handle_mode

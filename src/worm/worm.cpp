@@ -1,8 +1,3 @@
-// Copyright (c) 2024 A.A.A. (contact at aeverless dot dev)
-//
-// Distributed under the MIT License.
-// A copy of the license is present in the LICENSE file.
-
 #if !defined(WORM_POSIX) && !defined(WORM_WINDOWS)
 
 #if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
